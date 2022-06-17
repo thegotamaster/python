@@ -113,7 +113,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
                 self.widget_party2()
             case "Цена(партия)":
                 self.widget_party3()
-            case "Ценв(аптека)":
+            case "Цена(аптека)":
                 self.widget_party4()
             case "Дата выпуска":
                 self.widget_party5()
@@ -525,31 +525,95 @@ class Ui_add_note_window(QtWidgets.QDialog, add_note_window.Ui_add_note_window):
         self.setupUi(self)
         self.button_save.clicked.connect(self.save_note)
 
+        self.components2()
+
+    # компоненты комбобоксов
+    def components2(self):
+        self.choice_manufacturer.addItems(["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"])
+        self.choice_name.addItems(["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"])
+        self.choice_release.addItems(["Таблетка", "Капсула", "Порошок", "Мазь", "Сироп", "Пиллюля"])
+        self.choice_pharmacology.addItems(["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство", "Обезбаливающее средство", "Гормональное средство", "Антибиотик"])
+
+        self.button_save.pressed.connect(self.changer2)
+
+    # кейсы комбобоксов
+    def changer2(self):
+        match self.choice_manufacturer.currentText():
+            case "Производство медикаментов":
+                self.save_note()
+            case "Канонфарма продакшн":
+                self.save_note()
+            case "Реплек фарм":
+                self.save_note()
+            case "Балканфарма":
+                self.save_note()
+            case "Гедеон рихтер":
+                self.save_note()
+            case "Синтез":
+                self.save_note()
+        match self.choice_name.currentText():
+            case "Фенитоин":
+                self.save_note()
+            case "Тримипрамин":
+                self.save_note()
+            case "Пирацетам":
+                self.save_note()
+            case "Спазмалгон":
+                self.save_note()
+            case "Медиана":
+                self.save_note()
+            case "Стрептомицин":
+                self.save_note()
+        match self.choice_release.currentText():
+            case "Таблетка":
+                self.save_note()
+            case "Капсула":
+                self.save_note()
+            case "Порошок":
+                self.save_note()
+            case "Мазь":
+                self.save_note()
+            case "Сироп":
+                self.save_note()
+            case "Пиллюля":
+                self.save_note()
+        match self.choice_pharmacology.currentText():
+            case "Противоэпилептическое средство":
+                self.save_note()
+            case "Антидепрессант":
+                self.save_note()
+            case "Ноотропное средство":
+                self.save_note()
+            case "Обезбаливающее средство":
+                self.save_note()
+            case "Гормональное средство":
+                self.save_note()
+            case "Антибиотик":
+                self.save_note()
+
     # кнопка "Сохранить"
     def save_note(self):
-        if not self.path == "" and not self.choice_maker.curentText() == "" and not self.choice_name.currentText() == "" and not self.choice_release.currentText() == "" and not self.choice_pharmacology.currentText() == "" and not self.instruction_memo.toPlainText() == "" and not self.barcode.toPlainText():
-            self.cursor.execute(
-                f"select manufacturer_key from manufacturer where manufacturer={self.choice_maker.currentText()}")
-            manufacturer = self.cursor.fetchall()[0][0]
-            self.cursor.execute(f"select name_key from catalogue where name={self.choice_name.currentText()}")
-            name = self.cursor.fetchall()[0][0]
-            self.cursor.execute(f"select shape_key from shape where shape={self.choice_release.currentText()}")
-            shape = self.cursor.fetchall()[0][0]
-            self.cursor.execute(f"select group_key from group where group={self.choice_pharmacology.currentText()}")
-            group = self.cursor.fetchall()[0][0]
-            self.path = self.path[0].split('/')[-1]
-            self.cursor.execute(
-                f"insert into general(manufacturer_key_internal,name_key_internal, shape_key_internal, "
-                f"group_key_internal, instruction_memo, barcode) values ({manufacturer},{name},{shape},{group},"
-                f"{self.instruction_memo.toPlainText()},{self.barcode.toPlainText()})")
-
-            ftp = ftplib.FTP("localhost")
-            ftp.login("ftp", "ftp")
-            ftp_upload(ftp, self.path)
-            ftp.quit()
-            pass
-        else:
-            pass
+        if not self.choice_manufacturer.currentText() == "" and not self.choice_name.currentText() == "" and not self.choice_release.currentText() == "" and not self.choice_pharmacology.currentText() == "" and not self.instruction_memo.text() == "" and not self.barcode.text():
+            conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1",
+                                    port=5432)
+            cursor = conn.cursor()
+            cursor.executemany(f"select manufacturer_key from manufacturer where manufacturer={self.choice_manufacturer.currentText()}")
+            manufacturer = cursor.fetchall()[0][0]
+            cursor.executemany(f"select name_key from catalog where name={self.choice_name.currentText()}")
+            name = cursor.fetchall()[0][0]
+            cursor.executemany(f"select shape_key from shape where shape={self.choice_release.currentText()}")
+            shape = cursor.fetchall()[0][0]
+            cursor.executemany(f"select group_key from grouppharm where group={self.choice_pharmacology.currentText()}")
+            group = cursor.fetchall()[0][0]
+            cursor.executemany(
+                f"insert into general(manufacturer_key,name_key, shape_key, "
+                f"group_key, instruction_memo, barcode) values ({manufacturer},{name},{shape},{group},"
+                f"{self.instruction_memo.text()},{self.barcode.text()})")
+            try:
+                cursor.executemany()
+                conn.commit()
+            except Exception as e:
+                print(e)
 
 
 # форма редактировать запись

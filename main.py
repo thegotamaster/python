@@ -162,7 +162,8 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
     def widget_medicine1(self):
         conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
         cursor = conn.cursor()
-        cursor.execute(f"Select name_key, shape_key, group_key, manufacturer_key, barcode, medicine.medicine_key, medicine.name_key, medicine.group_key, medicine.manufacturer_key from medicine")
+        cursor.execute(
+            f"Select name_key, shape_key, group_key, manufacturer_key, barcode, medicine.medicine_key, medicine.name_key, medicine.group_key, medicine.manufacturer_key from medicine")
         conn.commit()
         self.tableWidget_tables.clear()
         rows = cursor.fetchall()
@@ -183,7 +184,8 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
     def widget_medicine2(self):
         conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
         cursor = conn.cursor()
-        cursor.execute(f"Select name_key, shape_key, group_key, manufacturer_key, comments, medicine.medicine_key from medicine")
+        cursor.execute(
+            f"Select name_key, shape_key, group_key, manufacturer_key, comments, medicine.medicine_key from medicine")
         conn.commit()
         self.tableWidget_tables.clear()
         rows = cursor.fetchall()
@@ -529,10 +531,14 @@ class Ui_add_note_window(QtWidgets.QDialog, add_note_window.Ui_add_note_window):
 
     # компоненты комбобоксов
     def components2(self):
-        self.choice_manufacturer.addItems(["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"])
+        self.choice_manufacturer.addItems(
+            ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер",
+             "Синтез"])
         self.choice_name.addItems(["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"])
         self.choice_release.addItems(["Таблетка", "Капсула", "Порошок", "Мазь", "Сироп", "Пиллюля"])
-        self.choice_pharmacology.addItems(["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство", "Обезбаливающее средство", "Гормональное средство", "Антибиотик"])
+        self.choice_pharmacology.addItems(
+            ["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство", "Обезбаливающее средство",
+             "Гормональное средство", "Антибиотик"])
 
         self.button_save.pressed.connect(self.changer2)
 
@@ -597,7 +603,8 @@ class Ui_add_note_window(QtWidgets.QDialog, add_note_window.Ui_add_note_window):
             conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1",
                                     port=5432)
             cursor = conn.cursor()
-            cursor.executemany(f"select manufacturer_key from manufacturer where manufacturer={self.choice_manufacturer.currentText()}")
+            cursor.executemany(
+                f"select manufacturer_key from manufacturer where manufacturer={self.choice_manufacturer.currentText()}")
             manufacturer = cursor.fetchall()[0][0]
             cursor.executemany(f"select name_key from catalog where name={self.choice_name.currentText()}")
             name = cursor.fetchall()[0][0]
@@ -633,11 +640,131 @@ class Ui_open_compound_form_window(QtWidgets.QDialog, open_compound_form_window.
     def __init__(self, conn, cursor):
         super().__init__()
         self.setupUi(self)
-        self.button_ok.clicked.connect(self.Ok)
 
-    # кнопка "Ок"
-    def Ok(self):
-        pass
+        self.components3()
+
+    # компоненты комбобоксов
+    def components3(self):
+        self.choice_pharmacy.addItems(["Здоровье", "Дарница", "Ольвия"])
+        self.choice_district.addItems(["Куйбышевский", "Калининский", "Ворошиловский"])
+        self.choice_number.addItems(["233", "141", "305"])
+        self.choice_address.addItems(["проспект Ленина, д.43", "улица Заречная, д.105", "улица Агрегатная, д.1а"])
+
+        self.button_ok.pressed.connect(self.changer3)
+
+    # кейсы комбобоксов
+    def changer3(self):
+        match self.choice_pharmacy.currentText():
+            case "Здоровье":
+                self.widget_form()
+        match self.choice_district.currentText():
+            case "Куйбышевский":
+                self.widget_form()
+        match self.choice_number.currentText():
+            case "233":
+                self.widget_form()
+        match self.choice_address.currentText():
+            case "проспект Ленина, д.43":
+                self.widget_form()
+        match self.choice_pharmacy.currentText():
+            case "Дарница":
+                self.widget_form2()
+        match self.choice_district.currentText():
+            case "Калининский":
+                self.widget_form2()
+        match self.choice_number.currentText():
+            case "141":
+                self.widget_form2()
+        match self.choice_address.currentText():
+            case "улица Заречная, д.105":
+                self.widget_form2()
+        match self.choice_pharmacy.currentText():
+            case "Ольвия":
+                self.widget_form3()
+        match self.choice_district.currentText():
+            case "Ворошиловский":
+                self.widget_form3()
+        match self.choice_number.currentText():
+            case "305":
+                self.widget_form3()
+        match self.choice_address.currentText():
+            case "улица Агрегатная, д.1а":
+                self.widget_form3()
+
+    # виджет составной формы (показ поставок для первой аптеки)
+    def widget_form(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1",
+                                port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from party where party_key = 1")
+        date = self.date_expiration.date()
+        print(date)
+        cursor.execute(f"Select datefact from party where datefact = '%s", self.date_expiration.date())
+        conn.commit()
+        self.tableWidget.clear()
+        rows = cursor.fetchall()
+        self.tableWidget.setRowCount(len(rows))
+        self.tableWidget.setColumnCount(12)
+        labels = ['Партия', 'Номер партии', 'Название лекарства', 'Количество упаковок', 'Цена(партия)', 'Цена(аптека)',
+                  'Дата выпуска', 'Дата окончания', 'Дата поступления', 'Наличие дефекта', 'Причина возврата',
+                  'Сотрудник']
+        self.tableWidget.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget.resizeColumnsToContents()
+
+    # виджет составной формы (показ поставок для второй аптеки)
+    def widget_form2(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1",
+                                port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from party where party_key = 2")
+        conn.commit()
+        self.tableWidget.clear()
+        rows = cursor.fetchall()
+        self.tableWidget.setRowCount(len(rows))
+        self.tableWidget.setColumnCount(12)
+        labels = ['Партия', 'Номер партии', 'Название лекарства', 'Количество упаковок', 'Цена(партия)', 'Цена(аптека)',
+                  'Дата выпуска', 'Дата окончания', 'Дата поступления', 'Наличие дефекта', 'Причина возврата',
+                  'Сотрудник']
+        self.tableWidget.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget.resizeColumnsToContents()
+
+    # виджет составной формы (показ поставок для третьей аптеки)
+    def widget_form3(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1",
+                                port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from party where party_key = 3")
+        conn.commit()
+        self.tableWidget.clear()
+        rows = cursor.fetchall()
+        self.tableWidget.setRowCount(len(rows))
+        self.tableWidget.setColumnCount(12)
+        labels = ['Партия', 'Номер партии', 'Название лекарства', 'Количество упаковок', 'Цена(партия)', 'Цена(аптека)',
+                  'Дата выпуска', 'Дата окончания', 'Дата поступления', 'Наличие дефекта', 'Причина возврата',
+                  'Сотрудник']
+        self.tableWidget.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget.resizeColumnsToContents()
 
 
 # проверка подключения к базе данных

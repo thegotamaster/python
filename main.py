@@ -697,9 +697,6 @@ class Ui_open_compound_form_window(QtWidgets.QDialog, open_compound_form_window.
                                 port=5432)
         cursor = conn.cursor()
         cursor.execute(f"Select * from party where party_key = 1")
-        date = self.date_expiration.date()
-        print(date)
-        cursor.execute(f"Select datefact from party where datefact = '%s", self.date_expiration.date())
         conn.commit()
         self.tableWidget.clear()
         rows = cursor.fetchall()
@@ -765,6 +762,10 @@ class Ui_open_compound_form_window(QtWidgets.QDialog, open_compound_form_window.
                 j += 1
             i += 1
         self.tableWidget.resizeColumnsToContents()
+
+        # date = self.date_expiration.date()
+        # print(date)
+        # cursor.execute(f"Select datefact from party where datefact = '%s", self.date_expiration.date())
 
 
 # проверка подключения к базе данных

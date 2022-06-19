@@ -455,7 +455,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
             i += 1
         self.tableWidget_tables.resizeColumnsToContents()
 
-    # соединение с меню
+    # соединение с менюnyughjjhh
     def MenuWindow(self):
         x = Ui_menu_form(conn, cursor)
         x.exec_()

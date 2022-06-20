@@ -68,6 +68,18 @@ class Ui_menu_form(QtWidgets.QDialog, menu_window.Ui_menu_form):
         x = Ui_requests_window(conn, cursor)
         x.exec_()
 
+def loop_pool (branches, workers, gen_range) :
+    for i in range(0, gen_range):
+        #Вот тут садамия с +=. Мы добавляем за 1 итерация в каждую строку по 1 записи. получается 10000 проходов=10000 строк в КАЖДОЙ ТАБЛИЦЕ
+        # random.choice(dict). Когда у тебя есть справочник ты можешь выбрать случайное значение из него этой командой
+        #random.randint(от,до). Когда нужно взять число в диапазоне от и до
+        #datetime.date(np.random.randint(1900,2000), np.random.randint(1, 12), np.random.randint(1, 28)) Случайная дата от 1900 до 2000 года. Коряво, но я сделал так и в скорости не потерял)))
+        branches += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"
+        workers += f"('{random.choice(np_dictionary)}',{np.random.randint(1, gen_range)}),"
+        contracts += f"({np.random.randint(1, gen_range)},{np.random.choice(insurance_range)},'{datetime.date(np.random.randint(2000, datetime.datetime.now().year-1), np.random.randint(1, 12), np.random.randint(1, 28))}',{np.random.randint(1, gen_range)},{np.random.randint(1, gen_range)},'{random.choice(photos)}'),"
+        clients += f"('{random.choice(np_dictionary)}',{np.random.choice(city_range)},'{datetime.date(np.random.randint(1900, datetime.datetime.now().year-18 ), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(social_range)},{random.randint(1000000000, 9999999999)}),"
+    return np.array([branches,workers,contracts,clients])# Именно так ты возвращаешь строку. Тоесть создаётся массив в котором 4 элемента и каждый элемент это строки эти только созданные.
+    #ВНИМАНИЕ! Мы в эту функцию передаём не строки с прошлыми запросами а пустые строки из функции в классе. Зачем нам таскать прошлые процессы с собой?
 
 # форма таблиц
 class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
@@ -541,11 +553,13 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
         pool = multiprocessing.Pool(4)# Создаём пул(пул это объединение потоков)
         res = pool.starmap_async(loop_pool, [(branches,workers,gen_step), (branches,workers,gen_step), (branches, workers,gen_step), (branches,workers,gen_step)])
-        #Синтаксис res = pool.starmap_async(loop_pool, [(параметры 1),(параметры 2)]). Этот код запустит в нашем пуле 2 задачи.
+        #Синтаксис res = pool.starmap_async(loop_pool, [(параметры 1),(параметры 2)]).  код слева запустит в нашем пуле 2 задачи.
+        # У тебя задач будет столько же сколько и ядер. Тоесть [()] и круглых скобок внутри 12.
         # Тоесть 2 функции на доступных ядрах. Если будет 24 функции то 12 твоих ядер посчитают сначала первые 12 потом остальные 12. Т.К. Имеется идентификатор
         # async , значит потоки никого не ждут и каждый поток старается сделать быстро и красиво
         # ВНИМАНИЕ. В функцию мы передаем ещё и крайние границы массива. Этого можно избежать, но у меня оно было завязано на рандоме. Тебе можно не делать так.
-        #Код выше исправлен и суть работает.
+        #Код выше исправлен и суть работает. Тебе нужно 12 раз передать параметры функциям. Так как у тебя в таблицах связь со справочниками передавай СПРАВОЧНИКИ
+        #Чтобы передавать справочники выше я писал массивы ["","",""] из строк Например city,photos и тд. Повторяй за мной. Меняй названия переменных и готов))
         results = res.get()
         #Получние массива ответов(return)
         #Вид типа       ответ1,ответ2,ответ3
@@ -555,11 +569,15 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         pool.join()
         #Оставь эти 2 строки без внимания, они просто работают и просто нужны чтобы потом потоки завершились корректно
 
-
+        # СЮДА СМОТРИШЬ ПОСЛЕ ТОГО КАК ГЛЯНЕШЬ ФУКНЦИЮ НА 71 СТРОКЕ
         branches = results[0][0] + results[1][0] + results[2][0] + results[3][0]
         workers = results[0][1] + results[1][1] + results[2][1] + results[3][1]
         contracts = results[0][2] + results[1][2] + results[2][2] + results[3][2]
         clients = results[0][3] + results[1][3] + results[2][3] + results[3][3]
+        # Соответственно у нас массив rusults состоит из массивов в каждом из которых строки под индексами.
+        # Смотри как оно работает. второй индекс это индекс строки(в каком порядке ретурн работает так и тут). Тоесть у нас бранчес возвращался первым значит от 0.
+        # ВНИМАНИЕ!!!!!!!!!!!!!!!!!!!!!!!!  У меня тут всего 4 строки. Так как было 4 процесса. Ты создаёшь 12 процессов и тут будет огромная таблица [0][0],[0][1],[0][2],[0][3],[0][4] и так до 11!!!!
+
         #ИНТЕРЕСНО! Тут у нас в строки добавляется наши значения из функций многопотока. Тоесть допустим функция вернула "(1 ", "2 ", "3 ", "4)"
         # Значит у нас будет соединение строк и строка будет (1 2 3 4)
         query = "INSERT INTO branch(general_key,name_branch,address,city,number_branch,year_branch) VALUES " + branches

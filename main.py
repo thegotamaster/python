@@ -1,5 +1,8 @@
 import ftplib
+import random
 import sys
+from datetime import datetime
+
 import psycopg2
 from PyQt5.QtWidgets import QTableWidgetItem, QPushButton
 
@@ -481,7 +484,102 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
     # кнопка "Генерация"
     def Generate(self):
-        pass
+        gen_range = 10000#СКОЛЬКО СТРОК
+        #ДАЛЕЕ НАЧИНАЕМ ЗАПОЛНЯТЬ СПРАВОЧНИКИ. НАША ЗАДАЧА ЗАПОЛНИТЬ СПРАВОЧНИКИ ЗАВЕДОМО КОРРЕКТНОЙ ИНФОРМАЦИЕЙ
+        self.cursor.execute("TRUNCATE social_dict,city_dict,insurance_dict,property_dict RESTART IDENTITY CASCADE")
+        self.conn.commit()
+        city = ["Донецк", "Макеевка", "Енакиево", "Кировское", "Торез", "Ждановка", "Амвросиевка", "Красный лиман",
+                "Орехово", "Харцызск", "Тельманово", "Ростов-на-Дону", "Киев", "Харьков", "Луцк", "Гонконг", "Чианжи",
+                "Шанхай", "Гуанчжоу", "Пекин"]
+        city_range = range(1, len(city))
+        request = ",".join("('%s')" % x for x in city)
+        self.cursor.execute("INSERT INTO city_dict(city) VALUES " + request)
+        self.conn.commit()
+        social = ["Доход ниже 50 000", "Доход выше 50 000"]
+        social_range = range(1, len(social))
+        request = ",".join("('%s')" % x for x in social)
+        self.cursor.execute("INSERT INTO social_dict(social) VALUES " + request)
+        self.conn.commit()
+        insurance = ["Страхование личное", "Страхование имущества", "Страхование ответственности",
+                     " Страхование финансовых рисков"]
+        insurance_range = range(1, len(insurance))
+        request = ",".join("('%s')" % x for x in insurance)
+        self.cursor.execute("INSERT INTO insurance_dict(insurance_type) VALUES " + request)
+        self.conn.commit()
+        property = ["Частная", "Общая", "Государственная"]
+        property_range = range(1, len(property))
+        request = ",".join("('%s')" % x for x in property)
+        self.cursor.execute("INSERT INTO property_dict(property) VALUES " + request)
+        self.conn.commit()
+        #ЗАКОНЧИЛИ ЗАПОЛНЯТЬ СПРАВОЧНИКИ
+
+        photos = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png"]        #СПИСОК ПУТЕЙ ДЛЯ ФОТО
+
+        date = datetime.date(random.randint(int(datetime.datetime.now().year), int(datetime.datetime.now().year) + 20),
+                             random.randint(1, 12), random.randint(1, 28))
+        array_general = [random.choice(city_range), random.choice(property_range),
+                         random.randint(1000000000, 9999999999),
+                         random.choice(np_dictionary) + " " + random.choice(np_dictionary) + " " + str(
+                             random.randint(1, 200)),
+                         random.choice(np_dictionary), random.randint(1000, 999999999),
+                         random.choice(photos), date, random.randint(1900, int(datetime.datetime.now().year))]
+        query = r"INSERT INTO general_(city_key,property_key,numberr,address,name_company,number_license,photo,date_open,year_open) VALUES ({},{},{},'{}','{}','{}','{}','{}',{})".format(
+            array_general[0], array_general[1], array_general[2], array_general[3], array_general[4], array_general[5],
+            array_general[6], array_general[7], array_general[8])
+        self.cursor.execute(query)
+        self.conn.commit()
+        # На данном моменте мы заполнили главный офис(array_general)
+        branches = ""
+        workers = ""
+        contracts = ""
+        clients = ""
+        #Эти строки-будущие запросы к БД.
+        #Пример запроса с массива INSERT INTO КУДА(СПИСОК ПОЛЕЙ) VALUES (значения поля 1,поля2,поля3)
+
+        gen_step = round(gen_range / 12)#Вот тут интереснее. делим вся нашу задачу на количество ядер. я задал их константами
+        # У тебя поидее 12 ядер,значит каждое ядро будет считать (количество строк в бд/12)
+
+        pool = multiprocessing.Pool(4)# Создаём пул(пул это объединение потоков)
+        res = pool.starmap_async(loop_pool, [(branches,workers,gen_step), (branches,workers,gen_step), (branches, workers,gen_step), (branches,workers,gen_step)])
+        #Синтаксис res = pool.starmap_async(loop_pool, [(параметры 1),(параметры 2)]). Этот код запустит в нашем пуле 2 задачи.
+        # Тоесть 2 функции на доступных ядрах. Если будет 24 функции то 12 твоих ядер посчитают сначала первые 12 потом остальные 12. Т.К. Имеется идентификатор
+        # async , значит потоки никого не ждут и каждый поток старается сделать быстро и красиво
+        # ВНИМАНИЕ. В функцию мы передаем ещё и крайние границы массива. Этого можно избежать, но у меня оно было завязано на рандоме. Тебе можно не делать так.
+        #Код выше исправлен и суть работает.
+        results = res.get()
+        #Получние массива ответов(return)
+        #Вид типа       ответ1,ответ2,ответ3
+        #               ответ1,ответ2,ответ3
+        #               ответ1,ответ2,ответ3
+        pool.close()
+        pool.join()
+        #Оставь эти 2 строки без внимания, они просто работают и просто нужны чтобы потом потоки завершились корректно
+
+
+        branches = results[0][0] + results[1][0] + results[2][0] + results[3][0]
+        workers = results[0][1] + results[1][1] + results[2][1] + results[3][1]
+        contracts = results[0][2] + results[1][2] + results[2][2] + results[3][2]
+        clients = results[0][3] + results[1][3] + results[2][3] + results[3][3]
+        #ИНТЕРЕСНО! Тут у нас в строки добавляется наши значения из функций многопотока. Тоесть допустим функция вернула "(1 ", "2 ", "3 ", "4)"
+        # Значит у нас будет соединение строк и строка будет (1 2 3 4)
+        query = "INSERT INTO branch(general_key,name_branch,address,city,number_branch,year_branch) VALUES " + branches
+        #СМ СИНТАКСИС ЗАПРОСОВ ВЫШЕ!!!!!!!!!!!!!!!!!!!!!!!!
+        # Запрос к бд+ наши длиныне строки (1,'Корвалол',1234),(2,'Аспирин',4321),..............................
+        self.cursor.execute(query[:-1])
+        self.conn.commit()
+        query = "INSERT INTO workers(FIO,branch_key) VALUES " + workers
+        self.cursor.execute(query[:-1])
+        self.conn.commit()
+        query = "INSERT INTO contract(summ,insurance_key,date,client_key,worker_key,text) VALUES " + contracts
+        self.cursor.execute(query[:-1])
+        self.conn.commit()
+        query = "INSERT INTO client(fio,city_key,date_birthday,address,social_key,number) VALUES " + clients
+        self.cursor.execute(query[:-1])
+        self.conn.commit()
+
+        #o = ok() Тут у меня открывается окно об успешном завершении
+        #o.exec_()
+
 
     # кнопка "Поиск"
     def Search(self):

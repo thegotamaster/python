@@ -1,5 +1,10 @@
 import ftplib
+import multiprocessing
+import random
 import sys
+from datetime import datetime
+import numpy as np
+
 import psycopg2
 from PyQt5.QtWidgets import QTableWidgetItem, QPushButton
 
@@ -479,9 +484,153 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
     def All(self):
         pass
 
+    # Почему в скобках ты передаешь только branches и workers?
+    def loop_pool(branches, workers, gen_range):
+        for i in range(0, gen_range):
+            branches += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"
+            workers += f"('{random.choice(np_dictionary)}',{np.random.randint(1, gen_range)}),"
+            contracts += f"({np.random.randint(1, gen_range)},{np.random.choice(insurance_range)},'{datetime.date(np.random.randint(2000, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}',{np.random.randint(1, gen_range)},{np.random.randint(1, gen_range)},'{random.choice(photos)}'),"
+            clients += f"('{random.choice(np_dictionary)}',{np.random.choice(city_range)},'{datetime.date(np.random.randint(1900, datetime.datetime.now().year - 18), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(social_range)},{random.randint(1000000000, 9999999999)}),"
+        return np.array([branches, workers, contracts,
+                         clients])
+
     # кнопка "Генерация"
     def Generate(self):
-        pass
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        gen_range = 10000
+        cursor.execute("TRUNCATE country, district, employee, grouppharm, mark, shape, type, catalog RESTART IDENTITY CASCADE")
+        conn.commit()
+
+        names = ["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"]
+        name_range = range(1, len(names))
+        request = ",".join("('%s')" % x for x in names)
+        cursor.execute("INSERT INTO catalog(names) VALUES " + request)
+        conn.commit()
+
+        country = ["Россия", "Беларусь", "Германия", "Чехия", "Южная Корея", "Италия", "Словакия", "Португалия",
+                   "Болгария", "Молдова"]
+        country_range = range(1, len(country))
+        request = ",".join("('%s')" % x for x in country)
+        cursor.execute("INSERT INTO country(country) VALUES " + request)
+        conn.commit()
+
+        district = ["Куйбышевский", "Калининский", "Ворошиловский", "Будённовский", "Киевский", "Кировский",
+                    "Ленинский", "Пролетарский", "Петровский"]
+        district_range = range(1, len(district))
+        request = ",".join("('%s')" % x for x in district)
+        cursor.execute("INSERT INTO district(district) VALUES " + request)
+        conn.commit()
+
+        employee = ["Безуглый В.В.", "Золотовский М.В.", "Зинатулин А.В."]
+        employee_range = range(1, len(employee))
+        request = ",".join("('%s')" % x for x in employee)
+        cursor.execute("INSERT INTO employee(employee) VALUES " + request)
+        conn.commit()
+
+        grouppharm = ["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство",
+                      "Обезбаливающее средство", "Гормональное средство", "Антибиотик"]
+        grouppharm_range = range(1, len(grouppharm))
+        request = ",".join("('%s')" % x for x in grouppharm)
+        cursor.execute("INSERT INTO grouppharm(grouppharm) VALUES " + request)
+        conn.commit()
+
+        shape = ["Таблетка", "Капсула", "Порошок", "Мазь", "Сироп", "Пиллюля"]
+        shape_range = range(1, len(shape))
+        request = ",".join("('%s')" % x for x in shape)
+        cursor.execute("INSERT INTO shape(shape) VALUES " + request)
+        conn.commit()
+
+        type = ["Частная", "Общая", "Государственная"]
+        type_range = range(1, len(type))
+        request = ",".join("('%s')" % x for x in type)
+        cursor.execute("INSERT INTO type(type) VALUES " + request)
+        conn.commit()
+
+        manufacturer = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма",
+                        "Гедеон рихтер", "Синтез"]
+        manufacturer_range = range(1, len(manufacturer))
+        request = ",".join("('%s')" % x for x in manufacturer)
+        cursor.execute("INSERT INTO manufacturer(manufacturer) VALUES " + request)
+        conn.commit()
+
+        # Есть такое поле как "Наличие дефекта" (defect), оно может быть либо "да", либо "нет" (boolean). К нему
+        # привязан справочник "Причина возврата" (mark) тоже boolean, который работает таким образом:
+        # ЕСЛИ наличие дефекта == да, то вызывается справочник причина возврата, в котором будут генерироваться такие
+        # поля, как ["Испорчена упаковка", "Просрочен", "Не хватает медикаментов"]. ЕСЛИ наличие дефекта == нет,
+        # то справочник выдает одно поле ["Дефекта нет"]"
+
+        # if defect == 0:
+        #      mark = ["Испорчена упаковка", "Просрочен", "Не хватает медикаментов"]
+        #      mark_range = range(1, len(mark))
+        #      request = ",".join("('%s')" % x for x in mark)
+        #      cursor.execute("INSERT INTO mark(mark) VALUES " + request)
+        #      conn.commit()
+        # else:
+        #      mark = ["Дефекта нет"]
+
+        instruction_photo = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png"]
+
+        # Что мне делать с этим datetime? У меня, например, питон не воспринимает его, возможно, стоит создать что-то?
+        date = datetime.date(random.randint(int(datetime.datetime.now().year), int(datetime.datetime.now().year) + 20),
+                             random.randint(1, 12), random.randint(1, 28))
+
+        # Почему medicine игнорируется и подчеркивается?
+        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(manufacturer_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
+        query = r"INSRET INTO medicine_(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({}, {}, {}, {},'{}','{}')".format(medicine[0], medicine[1], medicine[2], medicine[3], medicine[4], medicine[5]))
+        cursor.execute(query)
+        conn.commit()
+        # Теперь мне заполнять таким образом следующие таблицы, верно?
+
+        # Эти строки-будущие запросы к БД. Пример запроса с массива INSERT INTO КУДА(СПИСОК ПОЛЕЙ) VALUES (значения поля 1,поля2,поля3)
+        # Что это значит? Ты имеешь в виду, что туда нужно будет вставлять запросы к БД?
+        # Или мы не трогаем эти строки, просто для понимания оставляем, что там будут будущие запросы?
+        branches = ""
+        workers = ""
+        contracts = ""
+        clients = ""
+
+        gen_step = round(
+            gen_range / 12)
+
+        # Верно сделала?
+        pool = multiprocessing.Pool(12)
+        res = pool.starmap_async(loop_pool, [(names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
+                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark)])
+
+        results = res.get()
+        pool.close()
+        pool.join()
+
+        # Верно сделала?
+        branches = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
+        workers = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
+        contracts = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
+        clients = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
+
+        #Этот кусочек я поняла, сделаю его уже как разберусь с тем, что выше
+        query = "INSERT INTO branch(general_key,name_branch,address,city,number_branch,year_branch) VALUES " + branches
+        cursor.execute(query[:-1])
+        conn.commit()
+        query = "INSERT INTO workers(FIO,branch_key) VALUES " + workers
+        cursor.execute(query[:-1])
+        conn.commit()
+        query = "INSERT INTO contract(summ,insurance_key,date,client_key,worker_key,text) VALUES " + contracts
+        cursor.execute(query[:-1])
+        conn.commit()
+        query = "INSERT INTO client(fio,city_key,date_birthday,address,social_key,number) VALUES " + clients
+        cursor.execute(query[:-1])
+        conn.commit()
 
     # кнопка "Поиск"
     def Search(self):

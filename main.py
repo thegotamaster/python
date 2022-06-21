@@ -485,6 +485,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         pass
 
     # Почему в скобках ты передаешь только branches и workers?
+    # loop_pool позже, сначала хочу разобраться с построением генерации
     def loop_pool(branches, workers, gen_range):
         for i in range(0, gen_range):
             branches += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"

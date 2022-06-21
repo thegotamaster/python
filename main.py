@@ -2,7 +2,7 @@ import ftplib
 import multiprocessing
 import random
 import sys
-from datetime import datetime
+import datetime
 import numpy as np
 
 import psycopg2
@@ -484,14 +484,12 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
     def All(self):
         pass
 
-    # Почему в скобках ты передаешь только branches и workers?
-    # loop_pool позже, сначала хочу разобраться с построением генерации
     def loop_pool(branches, workers, gen_range):
         for i in range(0, gen_range):
-            branches += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"
-            workers += f"('{random.choice(np_dictionary)}',{np.random.randint(1, gen_range)}),"
-            contracts += f"({np.random.randint(1, gen_range)},{np.random.choice(insurance_range)},'{datetime.date(np.random.randint(2000, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}',{np.random.randint(1, gen_range)},{np.random.randint(1, gen_range)},'{random.choice(photos)}'),"
-            clients += f"('{random.choice(np_dictionary)}',{np.random.choice(city_range)},'{datetime.date(np.random.randint(1900, datetime.datetime.now().year - 18), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(social_range)},{random.randint(1000000000, 9999999999)}),"
+            catalog += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"
+            medicine += f"('{random.choice(np_dictionary)}',{np.random.randint(1, gen_range)}),"
+            party += f"({np.random.randint(1, gen_range)},{np.random.choice(insurance_range)},'{datetime.date(np.random.randint(2000, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}',{np.random.randint(1, gen_range)},{np.random.randint(1, gen_range)},'{random.choice(photos)}'),"
+            pharmacy += f"('{random.choice(np_dictionary)}',{np.random.choice(city_range)},'{datetime.date(np.random.randint(1900, datetime.datetime.now().year - 18), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(social_range)},{random.randint(1000000000, 9999999999)}),"
         return np.array([branches, workers, contracts,
                          clients])
 
@@ -503,10 +501,16 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("TRUNCATE country, district, employee, grouppharm, mark, shape, type, catalog RESTART IDENTITY CASCADE")
         conn.commit()
 
-        names = ["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"]
-        name_range = range(1, len(names))
-        request = ",".join("('%s')" % x for x in names)
-        cursor.execute("INSERT INTO catalog(names) VALUES " + request)
+        name = ["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"]
+        name_range = range(1, len(name))
+        request = ",".join("('%s')" % x for x in name)
+        cursor.execute("INSERT INTO catalog(name) VALUES " + request)
+        conn.commit()
+
+        pharmacy = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"]
+        pharmacy_range = range(1, len(pharmacy))
+        request = ",".join("('%s')" % x for x in pharmacy)
+        cursor.execute("INSERT INTO pharmacy(pharmacy) VALUES " + request)
         conn.commit()
 
         country = ["Россия", "Беларусь", "Германия", "Чехия", "Южная Корея", "Италия", "Словакия", "Португалия",
@@ -523,17 +527,23 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO district(district) VALUES " + request)
         conn.commit()
 
+        address = ["улица Западная", "улица Восточная", "улица Южная", "улица Северная", "улица Юго-Западная", "улица Юго-Восточная", "улица Северо-Западная", "улица Северо-Восточная"]
+        address_range = range(1, len(address))
+        request = ",".join("('%s')" % x for x in address)
+        cursor.execute("INSERT INTO pharmacy(addresspharm) VALUES " + request)
+        conn.commit()
+
         employee = ["Безуглый В.В.", "Золотовский М.В.", "Зинатулин А.В."]
         employee_range = range(1, len(employee))
         request = ",".join("('%s')" % x for x in employee)
         cursor.execute("INSERT INTO employee(employee) VALUES " + request)
         conn.commit()
 
-        grouppharm = ["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство",
+        group = ["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство",
                       "Обезбаливающее средство", "Гормональное средство", "Антибиотик"]
-        grouppharm_range = range(1, len(grouppharm))
-        request = ",".join("('%s')" % x for x in grouppharm)
-        cursor.execute("INSERT INTO grouppharm(grouppharm) VALUES " + request)
+        group_range = range(1, len(group))
+        request = ",".join("('%s')" % x for x in group)
+        cursor.execute("INSERT INTO grouppharm(group) VALUES " + request)
         conn.commit()
 
         shape = ["Таблетка", "Капсула", "Порошок", "Мазь", "Сироп", "Пиллюля"]
@@ -555,37 +565,47 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO manufacturer(manufacturer) VALUES " + request)
         conn.commit()
 
-        # Есть такое поле как "Наличие дефекта" (defect), оно может быть либо "да", либо "нет" (boolean). К нему
-        # привязан справочник "Причина возврата" (mark) тоже boolean, который работает таким образом:
-        # ЕСЛИ наличие дефекта == да, то вызывается справочник причина возврата, в котором будут генерироваться такие
-        # поля, как ["Испорчена упаковка", "Просрочен", "Не хватает медикаментов"]. ЕСЛИ наличие дефекта == нет,
-        # то справочник выдает одно поле ["Дефекта нет"]"
+        defect = ["Да", "Нет"]
+        defect_range = range(1, len(defect))
+        request = ",".join("('%s')" % x for x in defect)
+        cursor.execute("INSERT INTO defect(defect) VALUES " + request)
+        conn.commit()
 
-        # if defect == 0:
-        #      mark = ["Испорчена упаковка", "Просрочен", "Не хватает медикаментов"]
-        #      mark_range = range(1, len(mark))
-        #      request = ",".join("('%s')" % x for x in mark)
-        #      cursor.execute("INSERT INTO mark(mark) VALUES " + request)
-        #      conn.commit()
-        # else:
-        #      mark = ["Дефекта нет"]
+        if defect == 0:
+            mark = ["Испорчена упаковка", "Просрочен", "Не хватает медикаментов"]
+            mark_range = range(1, len(mark))
+            request = ",".join("('%s')" % x for x in mark)
+            cursor.execute("INSERT INTO mark(mark) VALUES " + request)
+            conn.commit()
+        else:
+            mark = ["Дефекта нет"]
+            mark_range = range(1, len(mark))
+            request = ",".join("('%s')" % x for x in mark)
+            cursor.execute("INSERT INTO mark(mark) VALUES " + request)
+            conn.commit()
 
         instruction_photo = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png"]
 
-        # Что мне делать с этим datetime? У меня, например, питон не воспринимает его, возможно, стоит создать что-то?
         date = datetime.date(random.randint(int(datetime.datetime.now().year), int(datetime.datetime.now().year) + 20),
                              random.randint(1, 12), random.randint(1, 28))
 
-        # Почему medicine игнорируется и подчеркивается?
-        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(manufacturer_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
-        query = r"INSRET INTO medicine_(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({}, {}, {}, {},'{}','{}')".format(medicine[0], medicine[1], medicine[2], medicine[3], medicine[4], medicine[5]))
-        cursor.execute(query)
+        catalog = [random.choice(name_range)]
+        cursor.execute(f"INSERT INTO catalog(name) VALUES ('{catalog[0]}')")
         conn.commit()
-        # Теперь мне заполнять таким образом следующие таблицы, верно?
+
+        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(group_range), random.choice(manufacturer_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
+        cursor.execute(f"INSERT INTO medicine(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({medicine[0]}, {medicine[1]}, {medicine[2]}, {medicine[3]},'{medicine[4]}','{medicine[5]}')")
+        conn.commit()
+
+        party = [random.randint(1, 10000), random.choice(name_range), random.randint(1, 10000), random.uniform(100.00, 200.00), random.uniform(300.00, 400.00), random.choice(date), random.choice(date), random.choice(date), random.choice(defect_range), random.choice(mark_range), random.choice(employee_range)]
+        cursor.execute(f"INSERT INTO medicine(numberparty, medicine_key, count, price, pricepharm, datestart, datefinish, datefact, defect, mark_key, employee_key) VALUES ('{party[0]}', {party[1]}, '{party[2]}', '{party[3]}', '{party[4]}', '{party[5]}', '{party[6]}', '{party[7]}', '{party[8]}', '{party[9]}', {party[10]}, {party[11]})")
+        conn.commit()
+
+        pharmacy = [random.choice(pharmacy_range), random.randint(1, 10000), random.choice(type_range), random.choice(district_range), random.choice(address_range) + random.randint(1, 100), random.randint(1000000000, 9999999999)]
+        cursor.execute(f"INSERT INTO pharmacy(pharmacy, number, type_key, district_key, addresspharm, phone) VALUES ('{pharmacy[0]}', '{pharmacy[1]}', {pharmacy[2]}, {pharmacy[3]},'{pharmacy[4]}','{pharmacy[5]}')")
+        conn.commit()
 
         # Эти строки-будущие запросы к БД. Пример запроса с массива INSERT INTO КУДА(СПИСОК ПОЛЕЙ) VALUES (значения поля 1,поля2,поля3)
-        # Что это значит? Ты имеешь в виду, что туда нужно будет вставлять запросы к БД?
-        # Или мы не трогаем эти строки, просто для понимания оставляем, что там будут будущие запросы?
         branches = ""
         workers = ""
         contracts = ""
@@ -614,10 +634,10 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         pool.join()
 
         # Верно сделала?
-        branches = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
-        workers = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
-        contracts = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
-        clients = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
+        catalog = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
+        medicine = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
+        party = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
+        pharmacy = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
 
         #Этот кусочек я поняла, сделаю его уже как разберусь с тем, что выше
         query = "INSERT INTO branch(general_key,name_branch,address,city,number_branch,year_branch) VALUES " + branches

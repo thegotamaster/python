@@ -483,9 +483,108 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
     # кнопка "Все записи"
     def All(self):
-        pass
+        match self.choice_table.currentText():
+            case "Каталог":
+                self.widget_catalog11()
+            case "Лекарства":
+                self.widget_medicine11()
+            case "Партия":
+                self.widget_party11()
+            case "Аптеки":
+                self.widget_pharmacy11()
 
-    def loop_pool(self, catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_range):
+    # виджет для всех записей каталога
+    def widget_catalog11(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from catalog")
+        conn.commit()
+        self.tableWidget_tables.clear()
+        rows = cursor.fetchall()
+        self.tableWidget_tables.setRowCount(len(rows))
+        self.tableWidget_tables.setColumnCount(2)
+        labels = ['Номер лекарства', 'Название лекарства']
+        self.tableWidget_tables.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget_tables.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget_tables.resizeColumnsToContents()
+
+    # виджет для всех записей лекарств
+    def widget_medicine11(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from medicine")
+        conn.commit()
+        self.tableWidget_tables.clear()
+        rows = cursor.fetchall()
+        self.tableWidget_tables.setRowCount(len(rows))
+        self.tableWidget_tables.setColumnCount(6)
+        labels = ['Название лекарства', 'Форма выпуска', 'Фармакологическая группа', 'Фирма производитель', 'Штрих-код',
+                  'Инструкция']
+        self.tableWidget_tables.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget_tables.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget_tables.resizeColumnsToContents()
+
+    # виджет для всех записей партии
+    def widget_party11(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from party")
+        conn.commit()
+        self.tableWidget_tables.clear()
+        rows = cursor.fetchall()
+        self.tableWidget_tables.setRowCount(len(rows))
+        self.tableWidget_tables.setColumnCount(10)
+        labels = ['Номер партии', 'Название лекарства', 'Количество упаковок', 'Цена(партия)', 'Цена(аптека)',
+                  'Дата выпуска', 'Дата окончания', 'Дата поступления', 'Наличие дефекта', 'Причина возврата',
+                  'Сотрудник']
+        self.tableWidget_tables.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget_tables.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget_tables.resizeColumnsToContents()
+
+    # виджет для всех записей аптек
+    def widget_pharmacy11(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Select * from pharmacy")
+        conn.commit()
+        self.tableWidget_tables.clear()
+        rows = cursor.fetchall()
+        self.tableWidget_tables.setRowCount(len(rows))
+        self.tableWidget_tables.setColumnCount(6)
+        labels = ['Название аптеки', 'Номер аптеки', 'Тип собственности', 'Район города', 'Адрес', 'Телефон']
+        self.tableWidget_tables.setHorizontalHeaderLabels(labels)
+        i = 0
+        for elem in rows:
+            j = 0
+            for t in elem:
+                self.tableWidget_tables.setItem(i, j, QTableWidgetItem(str(t).strip()))
+                j += 1
+            i += 1
+        self.tableWidget_tables.resizeColumnsToContents()
+
+    # дополнительная функция для многопотока
+    def loop_pool(self, catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range,
+                  group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range,
+                  pharmacies_range, type_range, district_range, address_range, country_range, letters, domains,
+                  gen_range):
         for i in range(0, gen_range):
             catalog += f"(1,'{random.choice(name_range)}'),"
             medicine += f"({random.choice(name_range)},{random.choice(shape_range)}, {random.choice(group_range)}, {random.choice(manufacturers_range)}, '{random.randint(1000000000, 9999999999)}', '{random.choice(instruction_photo)}'),"
@@ -500,7 +599,8 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
         cursor = conn.cursor()
         gen_range = 10000
-        cursor.execute("TRUNCATE country, district, employee, grouppharm, mark, shape, type, catalog RESTART IDENTITY CASCADE")
+        cursor.execute(
+            "TRUNCATE country, district, employee, grouppharm, mark, shape, type, catalog RESTART IDENTITY CASCADE")
         conn.commit()
 
         name = ["Фенитоин", "Тримипрамин", "Пирацетам", "Спазмалгон", "Медиана", "Стрептомицин"]
@@ -509,7 +609,8 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO catalog(name) VALUES " + request)
         conn.commit()
 
-        pharmacies = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"]
+        pharmacies = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер",
+                      "Синтез"]
         pharmacies_range = range(1, len(pharmacies))
         request = ",".join("('%s')" % x for x in pharmacies)
         cursor.execute("INSERT INTO pharmacy(pharmacy) VALUES " + request)
@@ -529,7 +630,8 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO district(district) VALUES " + request)
         conn.commit()
 
-        address = ["улица Западная", "улица Восточная", "улица Южная", "улица Северная", "улица Юго-Западная", "улица Юго-Восточная", "улица Северо-Западная", "улица Северо-Восточная"]
+        address = ["улица Западная", "улица Восточная", "улица Южная", "улица Северная", "улица Юго-Западная",
+                   "улица Юго-Восточная", "улица Северо-Западная", "улица Северо-Восточная"]
         address_range = range(1, len(address))
         request = ",".join("('%s')" % x for x in address)
         cursor.execute("INSERT INTO pharmacy(addresspharm) VALUES " + request)
@@ -542,7 +644,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         conn.commit()
 
         group = ["Противоэпилептическое средство", "Антидепрессант", "Ноотропное средство",
-                      "Обезбаливающее средство", "Гормональное средство", "Антибиотик"]
+                 "Обезбаливающее средство", "Гормональное средство", "Антибиотик"]
         group_range = range(1, len(group))
         request = ",".join("('%s')" % x for x in group)
         cursor.execute("INSERT INTO grouppharm(group) VALUES " + request)
@@ -561,7 +663,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         conn.commit()
 
         manufacturers = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма",
-                        "Гедеон рихтер", "Синтез"]
+                         "Гедеон рихтер", "Синтез"]
         manufacturers_range = range(1, len(manufacturers))
         request = ",".join("('%s')" % x for x in manufacturers)
         cursor.execute("INSERT INTO manufacturer(manufacturer) VALUES " + request)
@@ -599,24 +701,36 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute(f"INSERT INTO catalog(name) VALUES ('{catalog[0]}')")
         conn.commit()
 
-        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(group_range), random.choice(manufacturers_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
-        cursor.execute(f"INSERT INTO medicine(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({medicine[0]}, {medicine[1]}, {medicine[2]}, {medicine[3]},'{medicine[4]}','{medicine[5]}')")
+        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(group_range),
+                    random.choice(manufacturers_range), random.randint(1000000000, 9999999999),
+                    random.choice(instruction_photo)]
+        cursor.execute(
+            f"INSERT INTO medicine(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({medicine[0]}, {medicine[1]}, {medicine[2]}, {medicine[3]},'{medicine[4]}','{medicine[5]}')")
         conn.commit()
 
-        party = [random.randint(1, 10000), random.choice(name_range), random.randint(1, 10000), random.uniform(100.00, 200.00), random.uniform(300.00, 400.00), date, date, date, random.choice(defect_range), random.choice(mark_range), random.choice(employees_range)]
-        cursor.execute(f"INSERT INTO medicine(numberparty, medicine_key, count, price, pricepharm, datestart, datefinish, datefact, defect, mark_key, employee_key) VALUES ('{party[0]}', {party[1]}, '{party[2]}', '{party[3]}', '{party[4]}', '{party[5]}', '{party[6]}', '{party[7]}', '{party[8]}', '{party[9]}', {party[10]}, {party[11]})")
+        party = [random.randint(1, 10000), random.choice(name_range), random.randint(1, 10000),
+                 random.uniform(100.00, 200.00), random.uniform(300.00, 400.00), date, date, date,
+                 random.choice(defect_range), random.choice(mark_range), random.choice(employees_range)]
+        cursor.execute(
+            f"INSERT INTO medicine(numberparty, medicine_key, count, price, pricepharm, datestart, datefinish, datefact, defect, mark_key, employee_key) VALUES ('{party[0]}', {party[1]}, '{party[2]}', '{party[3]}', '{party[4]}', '{party[5]}', '{party[6]}', '{party[7]}', '{party[8]}', '{party[9]}', {party[10]}, {party[11]})")
         conn.commit()
 
-        pharmacy = [random.choice(pharmacies_range), random.randint(1, 10000), random.choice(type_range), random.choice(district_range), random.choice(address_range) + random.randint(1, 100), random.randint(1000000000, 9999999999)]
-        cursor.execute(f"INSERT INTO pharmacy(pharmacy, number, type_key, district_key, addresspharm, phone) VALUES ('{pharmacy[0]}', {pharmacy[1]}, '{pharmacy[2]}', {pharmacy[3]},'{pharmacy[4]}','{pharmacy[5]}')")
+        pharmacy = [random.choice(pharmacies_range), random.randint(1, 10000), random.choice(type_range),
+                    random.choice(district_range), random.choice(address_range) + random.randint(1, 100),
+                    random.randint(1000000000, 9999999999)]
+        cursor.execute(
+            f"INSERT INTO pharmacy(pharmacy, number, type_key, district_key, addresspharm, phone) VALUES ('{pharmacy[0]}', {pharmacy[1]}, '{pharmacy[2]}', {pharmacy[3]},'{pharmacy[4]}','{pharmacy[5]}')")
         conn.commit()
 
         employee = [random.choice(employees_range), random.choice(pharmacies_range)]
         cursor.execute(f"INSERT INTO employee(employee, pharmacy_key) VALUES ('{employee[0]}', {employee[1]})")
         conn.commit()
 
-        manufacturer = [random.choice(manufacturers_range), random.choice(country_range), random.choice(letters) + "@" + random.choice(domains), random.randint(1900, int(datetime.datetime.now().year))]
-        cursor.execute(f"INSERT INTO pharmacy(manufacturer, country_key, email, address, yearfirm) VALUES ('{manufacturer[0]}', {manufacturer[1]}, '{manufacturer[2]}', '{manufacturer[3]}','{manufacturer[4]}')")
+        manufacturer = [random.choice(manufacturers_range), random.choice(country_range),
+                        random.choice(letters) + "@" + random.choice(domains),
+                        random.randint(1900, int(datetime.datetime.now().year))]
+        cursor.execute(
+            f"INSERT INTO pharmacy(manufacturer, country_key, email, address, yearfirm) VALUES ('{manufacturer[0]}', {manufacturer[1]}, '{manufacturer[2]}', '{manufacturer[3]}','{manufacturer[4]}')")
         conn.commit()
 
         # Эти строки-будущие запросы к БД. Пример запроса с массива INSERT INTO КУДА(СПИСОК ПОЛЕЙ) VALUES (значения поля 1,поля2,поля3)
@@ -629,17 +743,82 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
         gen_step = round(gen_range / 12)
         pool = multiprocessing.Pool(12)
-        res = pool.starmap_async(self.loop_pool, [(catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name_range, shape_range, group_range, manufacturers_range, instruction_photo, defect_range, mark_range, employees_range, pharmacies_range, type_range, district_range, address_range, country_range, letters, domains, gen_step)])
+        res = pool.starmap_async(self.loop_pool, [(catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                   name_range, shape_range, group_range, manufacturers_range,
+                                                   instruction_photo, defect_range, mark_range, employees_range,
+                                                   pharmacies_range, type_range, district_range, address_range,
+                                                   country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step), (
+                                                      catalog, medicine, party, pharmacy, employee, manufacturer,
+                                                      name_range, shape_range, group_range, manufacturers_range,
+                                                      instruction_photo, defect_range, mark_range, employees_range,
+                                                      pharmacies_range, type_range, district_range, address_range,
+                                                      country_range, letters, domains, gen_step)])
         results = res.get()
         pool.close()
         pool.join()
 
-        catalog = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
-        medicine = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
-        party = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
-        pharmacy = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
-        employee = results[0][4] + results[1][4] + results[2][4] + results[3][4] + results[4][4] + results[5][4] + results[6][4] + results[7][4] + results[8][4] + results[9][4] + results[10][4] + results[11][4]
-        manufacturer = results[0][5] + results[1][5] + results[2][5] + results[3][5] + results[4][5] + results[5][5] + results[6][5] + results[7][5] + results[8][5] + results[9][5] + results[10][5] + results[11][5]
+        catalog = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + \
+                  results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
+        medicine = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + \
+                   results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
+        party = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + \
+                results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
+        pharmacy = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + \
+                   results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
+        employee = results[0][4] + results[1][4] + results[2][4] + results[3][4] + results[4][4] + results[5][4] + \
+                   results[6][4] + results[7][4] + results[8][4] + results[9][4] + results[10][4] + results[11][4]
+        manufacturer = results[0][5] + results[1][5] + results[2][5] + results[3][5] + results[4][5] + results[5][5] + \
+                       results[6][5] + results[7][5] + results[8][5] + results[9][5] + results[10][5] + results[11][5]
 
         query = "INSERT INTO catalog(name) VALUES " + catalog
         cursor.execute(query[:-1])
@@ -666,7 +845,43 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
     # кнопка "Удалить"
     def Delete(self):
-        pass
+        match self.choice_table.currentText():
+            case "Каталог":
+                self.widget_catalog22()
+            case "Лекарства":
+                self.widget_medicine22()
+            case "Партия":
+                self.widget_party22()
+            case "Аптеки":
+                self.widget_pharmacy22()
+
+    # виджет для удаления записей каталога
+    def widget_catalog22(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Delete from catalog")
+        conn.commit()
+
+    # виджет для удаления записей лекарств
+    def widget_medicine22(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Delete from medicine")
+        conn.commit()
+
+    # виджет для удаления записей партии
+    def widget_party22(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Delete from party")
+        conn.commit()
+
+    # виджет для удаления записей аптек
+    def widget_pharmacy22(self):
+        conn = psycopg2.connect(database="postgres", user="postgres", password="postgres", host="127.0.0.1", port=5432)
+        cursor = conn.cursor()
+        cursor.execute(f"Delete from pharmacy")
+        conn.commit()
 
 
 # форма запросов

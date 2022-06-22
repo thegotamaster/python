@@ -1,6 +1,7 @@
 import ftplib
 import multiprocessing
 import random
+import string
 import sys
 import datetime
 import numpy as np
@@ -484,14 +485,15 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
     def All(self):
         pass
 
-    def loop_pool(branches, workers, gen_range):
+    def loop_pool(self, catalog, medicine, party, pharmacy, employee, manufacturer, gen_range):
         for i in range(0, gen_range):
-            catalog += f"(1,'{random.choice(np_dictionary)}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(city_range)},{random.randint(1000000000, 9999999999)},{np.random.randint(date, datetime.datetime.now().year)}),"
-            medicine += f"('{random.choice(np_dictionary)}',{np.random.randint(1, gen_range)}),"
-            party += f"({np.random.randint(1, gen_range)},{np.random.choice(insurance_range)},'{datetime.date(np.random.randint(2000, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}',{np.random.randint(1, gen_range)},{np.random.randint(1, gen_range)},'{random.choice(photos)}'),"
-            pharmacy += f"('{random.choice(np_dictionary)}',{np.random.choice(city_range)},'{datetime.date(np.random.randint(1900, datetime.datetime.now().year - 18), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(np_dictionary)} {random.choice(np_dictionary)} {np.random.randint(1, 200)}',{np.random.choice(social_range)},{random.randint(1000000000, 9999999999)}),"
-        return np.array([branches, workers, contracts,
-                         clients])
+            catalog += f"(1,'{random.choice(name_range)}'),"
+            medicine += f"({random.choice(name_range)},{random.choice(shape_range)}, {random.choice(group_range)}, {random.choice(manufacturers_range)}, '{random.randint(1000000000, 9999999999)}', '{random.choice(instruction_photo)}'),"
+            party += f"('{random.randint(1, 10000)}',{random.choice(name_range)}, '{random.randint(1, 10000)}', '{random.uniform(100.00, 200.00)}', '{random.uniform(300.00, 400.00)}', '{datetime.date(np.random.randint(2013, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}', '{datetime.date(np.random.randint(2015, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}','{datetime.date(np.random.randint(2013, datetime.datetime.now().year - 1), np.random.randint(1, 12), np.random.randint(1, 28))}','{random.choice(defect_range)}', {random.choice(mark_range)}, {random.choice(employees_range)}),"
+            #pharmacy += f"('{random.choice(pharmacies_range)}', '{random.randint(1, 10000)}', {random.choice(type_range)}, {random.choice(district_range)}, '{random.choice(address_range)}, !!!!!!пробел!!!!!!!, {random.randint(1, 100)}', '{random.randint(1000000000, 9999999999)}'),"
+            employee += f"('{random.choice(employees_range)}', {random.choice(pharmacies_range)}),"
+            #manufacturer += f"('{random.choice(manufacturers_range)}', {random.choice(country_range)}, '{random.choice(letters)}, !!!!!собачка для email!!!!, {random.choice(domains)}', '{random.randint(1900, int(datetime.datetime.now().year - 1))}'),"
+        return np.array([catalog, medicine, party, pharmacy, employee, manufacturer])
 
     # кнопка "Генерация"
     def Generate(self):
@@ -507,9 +509,9 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO catalog(name) VALUES " + request)
         conn.commit()
 
-        pharmacy = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"]
-        pharmacy_range = range(1, len(pharmacy))
-        request = ",".join("('%s')" % x for x in pharmacy)
+        pharmacies = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма", "Гедеон рихтер", "Синтез"]
+        pharmacies_range = range(1, len(pharmacies))
+        request = ",".join("('%s')" % x for x in pharmacies)
         cursor.execute("INSERT INTO pharmacy(pharmacy) VALUES " + request)
         conn.commit()
 
@@ -533,9 +535,9 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO pharmacy(addresspharm) VALUES " + request)
         conn.commit()
 
-        employee = ["Безуглый В.В.", "Золотовский М.В.", "Зинатулин А.В."]
-        employee_range = range(1, len(employee))
-        request = ",".join("('%s')" % x for x in employee)
+        employees = ["Безуглый В.В.", "Золотовский М.В.", "Зинатулин А.В."]
+        employees_range = range(1, len(employees))
+        request = ",".join("('%s')" % x for x in employees)
         cursor.execute("INSERT INTO employee(employee) VALUES " + request)
         conn.commit()
 
@@ -558,10 +560,10 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute("INSERT INTO type(type) VALUES " + request)
         conn.commit()
 
-        manufacturer = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма",
+        manufacturers = ["Производство медикаментов", "Канонфарма продакшн", "Реплек фарм", "Балканфарма",
                         "Гедеон рихтер", "Синтез"]
-        manufacturer_range = range(1, len(manufacturer))
-        request = ",".join("('%s')" % x for x in manufacturer)
+        manufacturers_range = range(1, len(manufacturers))
+        request = ",".join("('%s')" % x for x in manufacturers)
         cursor.execute("INSERT INTO manufacturer(manufacturer) VALUES " + request)
         conn.commit()
 
@@ -586,6 +588,10 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
         instruction_photo = ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "10.png"]
 
+        domains = ["hotmail.com", "gmail.com", "aol.com", "mail.com", "mail.kz", "yahoo.com"]
+
+        letters = string.ascii_lowercase[:7]
+
         date = datetime.date(random.randint(int(datetime.datetime.now().year), int(datetime.datetime.now().year) + 20),
                              random.randint(1, 12), random.randint(1, 28))
 
@@ -593,63 +599,64 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
         cursor.execute(f"INSERT INTO catalog(name) VALUES ('{catalog[0]}')")
         conn.commit()
 
-        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(group_range), random.choice(manufacturer_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
+        medicine = [random.choice(name_range), random.choice(shape_range), random.choice(group_range), random.choice(manufacturers_range), random.randint(1000000000, 9999999999), random.choice(instruction_photo)]
         cursor.execute(f"INSERT INTO medicine(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES ({medicine[0]}, {medicine[1]}, {medicine[2]}, {medicine[3]},'{medicine[4]}','{medicine[5]}')")
         conn.commit()
 
-        party = [random.randint(1, 10000), random.choice(name_range), random.randint(1, 10000), random.uniform(100.00, 200.00), random.uniform(300.00, 400.00), random.choice(date), random.choice(date), random.choice(date), random.choice(defect_range), random.choice(mark_range), random.choice(employee_range)]
+        party = [random.randint(1, 10000), random.choice(name_range), random.randint(1, 10000), random.uniform(100.00, 200.00), random.uniform(300.00, 400.00), date, date, date, random.choice(defect_range), random.choice(mark_range), random.choice(employees_range)]
         cursor.execute(f"INSERT INTO medicine(numberparty, medicine_key, count, price, pricepharm, datestart, datefinish, datefact, defect, mark_key, employee_key) VALUES ('{party[0]}', {party[1]}, '{party[2]}', '{party[3]}', '{party[4]}', '{party[5]}', '{party[6]}', '{party[7]}', '{party[8]}', '{party[9]}', {party[10]}, {party[11]})")
         conn.commit()
 
-        pharmacy = [random.choice(pharmacy_range), random.randint(1, 10000), random.choice(type_range), random.choice(district_range), random.choice(address_range) + random.randint(1, 100), random.randint(1000000000, 9999999999)]
+        pharmacy = [random.choice(pharmacies_range), random.randint(1, 10000), random.choice(type_range), random.choice(district_range), random.choice(address_range) + + random.randint(1, 100), random.randint(1000000000, 9999999999)]
         cursor.execute(f"INSERT INTO pharmacy(pharmacy, number, type_key, district_key, addresspharm, phone) VALUES ('{pharmacy[0]}', '{pharmacy[1]}', {pharmacy[2]}, {pharmacy[3]},'{pharmacy[4]}','{pharmacy[5]}')")
         conn.commit()
 
+        employee = [random.choice(employees_range), random.choice(pharmacies_range)]
+        cursor.execute(f"INSERT INTO employee(employee, pharmacy_key) VALUES ('{employee[0]}', {employee[1]})")
+        conn.commit()
+
+        manufacturer = [random.choice(manufacturers_range), random.choice(country_range), random.choice(letters) + "@" + random.choice(domains), random.randint(1900, int(datetime.datetime.now().year))]
+        cursor.execute(f"INSERT INTO pharmacy(manufacturer, country_key, email, address, yearfirm) VALUES ('{manufacturer[0]}', {manufacturer[1]}, '{manufacturer[2]}', '{manufacturer[3]}','{manufacturer[4]}')")
+        conn.commit()
+
         # Эти строки-будущие запросы к БД. Пример запроса с массива INSERT INTO КУДА(СПИСОК ПОЛЕЙ) VALUES (значения поля 1,поля2,поля3)
-        branches = ""
-        workers = ""
-        contracts = ""
-        clients = ""
+        catalog = ""
+        medicine = ""
+        party = ""
+        pharmacy = ""
+        employee = ""
+        manufacturer = ""
 
-        gen_step = round(
-            gen_range / 12)
-
-        # Верно сделала?
+        gen_step = round(gen_range / 12)
         pool = multiprocessing.Pool(12)
-        res = pool.starmap_async(loop_pool, [(names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark),
-                                             (names, country, district, employee, grouppharm, shape, type, manufacturer, gen_step, mark)])
-
+        res = pool.starmap_async(self.loop_pool, [(catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step), (catalog, medicine, party, pharmacy, employee, manufacturer, name, pharmacies, country, district, address, employees, group, shape, type, manufacturers, defect, mark, gen_step)])
         results = res.get()
         pool.close()
         pool.join()
 
-        # Верно сделала?
         catalog = results[0][0] + results[1][0] + results[2][0] + results[3][0] + results[4][0] + results[5][0] + results[6][0] + results[7][0] + results[8][0] + results[9][0] + results[10][0] + results[11][0]
         medicine = results[0][1] + results[1][1] + results[2][1] + results[3][1] + results[4][1] + results[5][1] + results[6][1] + results[7][1] + results[8][1] + results[9][1] + results[10][1] + results[11][1]
         party = results[0][2] + results[1][2] + results[2][2] + results[3][2] + results[4][2] + results[5][2] + results[6][2] + results[7][2] + results[8][2] + results[9][2] + results[10][2] + results[11][2]
         pharmacy = results[0][3] + results[1][3] + results[2][3] + results[3][3] + results[4][3] + results[5][3] + results[6][3] + results[7][3] + results[8][3] + results[9][3] + results[10][3] + results[11][3]
+        employee = results[0][4] + results[1][4] + results[2][4] + results[3][4] + results[4][4] + results[5][4] + results[6][4] + results[7][4] + results[8][4] + results[9][4] + results[10][4] + results[11][4]
+        manufacturer = results[0][5] + results[1][5] + results[2][5] + results[3][5] + results[4][5] + results[5][5] + results[6][5] + results[7][5] + results[8][5] + results[9][5] + results[10][5] + results[11][5]
 
-        #Этот кусочек я поняла, сделаю его уже как разберусь с тем, что выше
-        query = "INSERT INTO branch(general_key,name_branch,address,city,number_branch,year_branch) VALUES " + branches
+        query = "INSERT INTO catalog(name) VALUES " + catalog
         cursor.execute(query[:-1])
         conn.commit()
-        query = "INSERT INTO workers(FIO,branch_key) VALUES " + workers
+        query = "INSERT INTO medicine(name_key, shape_key, group_key, manufacturer_key, barcode, comments) VALUES " + medicine
         cursor.execute(query[:-1])
         conn.commit()
-        query = "INSERT INTO contract(summ,insurance_key,date,client_key,worker_key,text) VALUES " + contracts
+        query = "INSERT INTO medicine(numberparty, medicine_key, count, price, pricepharm, datestart, datefinish, datefact, defect, mark_key, employee_key) VALUES " + party
         cursor.execute(query[:-1])
         conn.commit()
-        query = "INSERT INTO client(fio,city_key,date_birthday,address,social_key,number) VALUES " + clients
+        query = "INSERT INTO pharmacy(pharmacy, number, type_key, district_key, addresspharm, phone) VALUES " + pharmacy
+        cursor.execute(query[:-1])
+        conn.commit()
+        query = "INSERT INTO employee(employee, pharmacy_key) VALUES " + employee
+        cursor.execute(query[:-1])
+        conn.commit()
+        query = "INSERT INTO pharmacy(manufacturer, country_key, email, address, yearfirm) VALUES " + manufacturer
         cursor.execute(query[:-1])
         conn.commit()
 

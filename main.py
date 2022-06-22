@@ -4,6 +4,8 @@ import random
 import string
 import sys
 import datetime
+import time
+import xlsxwriter
 import numpy as np
 
 import psycopg2
@@ -632,10 +634,7 @@ class Ui_tables_window(QtWidgets.QDialog, tables_window.Ui_tables_window):
 
         address = ["улица Западная", "улица Восточная", "улица Южная", "улица Северная", "улица Юго-Западная",
                    "улица Юго-Восточная", "улица Северо-Западная", "улица Северо-Восточная"]
-        address_range = range(1, len(address))
-        request = ",".join("('%s')" % x for x in address)
-        cursor.execute("INSERT INTO pharmacy(addresspharm) VALUES " + request)
-        conn.commit()
+        #Вот этот массив сразу передаешь в луп пул и в нём добавляешь В САМЫЙ КОНЕЦ RANDOM.CHOICE.
 
         employees = ["Безуглый В.В.", "Золотовский М.В.", "Зинатулин А.В."]
         employees_range = range(1, len(employees))
@@ -905,7 +904,42 @@ class Ui_requests_window(QtWidgets.QDialog, requests_window.Ui_requests_window):
 
     # кнопка "Диаграмма"
     def Diagram(self):
-        pass
+        start_time = time.time()
+        alp = ["а","б","в","г","д","е","ё","ж","з","и","к","л","м","н","о","п","р","с","т","у","ф","х","ц","ч","ш","щ","э","ю","я"]
+        workers = []
+        res = []
+        for i in alp:
+            self.cursor.execute(f"Select avg(summ) from contract inner join client on contract.client_key=client.client_key where client.fio like '{i}%'")
+            try:
+                res.append(int(self.cursor.fetchone()[0]))
+            except:
+                res.append(0)
+        workers.append(alp)
+        workers.append(res)
+        workbook = xlsxwriter.Workbook(f'export/workers_final_request_export.xlsx')
+        worksheet = workbook.add_worksheet()
+        i = 0
+        for t in range(len(alp)):
+            worksheet.write(i, 0, str(workers[0][t]).strip())
+            worksheet.write(i, 1, str(workers[1][t]).strip())
+            i += 1
+        workbook.close()
+        print("--- %s seconds ---" % (time.time() - start_time))
+
+        fig, ax = plt.subplots(figsize=(15, 10))
+        ax.pie(res, labels=alp,autopct='%1.1f%%')
+        plt.savefig('pie.png')
+        fig, bx = plt.subplots(figsize=(15, 10))
+        bx.bar(alp, res, color='blue')
+        plt.savefig('bar.png')
+        t = print_file()
+        t.load_image('pie.png')
+        t.exec_()
+        os.remove('pie.png')
+        y = print_file()
+        y.load_image('bar.png')
+        y.exec_()
+        os.remove('bar.png')
 
     # кнопка "Сохранить"
     def Save(self):
@@ -1168,6 +1202,7 @@ else:
 
 # функция main
 if __name__ == "__main__":
+
     app = QtWidgets.QApplication(sys.argv)
     window = Ui_auth_form()
     window.show()
